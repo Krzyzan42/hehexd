@@ -1,55 +1,17 @@
 import cv2
-import random
-import time
-import pickle
+import sys
 import socket
-from frame import FrameSegment, split_frame_into_segments
+from frame import split_frame_into_segments
 
-def xdd():
-    server_address = ('localhost', 12345)
-    message = b'Hello, Server!' 
-
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    try:
-        print(f'Sending: {message.decode()}')
-        s.sendto(message, server_address)
-
-        data, server = s.recvfrom(4096)
-        print(f'Received: {data.decode()} from {server}')
-
-    except Exception as e:
-        print(f"Error: {e}")
-
-    s.close()
-
-    server_address = ('localhost', 12345)  # Address to listen on
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    cam = cv2.VideoCapture(0)
-
-    server_address = ('localhost', 12345)
-
-    while True:
-        ret, frame = cam.read()
-        a = pickle.dumps(frame)
-        cv2.imshow('test', frame)
-        key = cv2.waitKey(1)
-        if key%256 == 27:
-            exit()
-
-        s.sendto(frame, server_address)
-        pass
-
-def test_send_single_img():
-    server_address = ('localhost', 12347)
+def run_client(host, port):
+    server_address = (host, int(port))
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     cam = cv2.VideoCapture(0)
 
     frame_c = 0
     while True:
         _, frame = cam.read()
-        #frame = cv2.resize(frame, (40, 30))
+        #frame = cv2.resize(frame, (1980, 1024))
 
         segments = split_frame_into_segments(frame, frame_n=frame_c)
         frame_c += 1
@@ -58,9 +20,7 @@ def test_send_single_img():
             s = segments[i]
             data = s.encode()
             sock.sendto(data, server_address)
-        time.sleep(0.01)
-            
 
 
 if __name__ == '__main__':
-    test_send_single_img()
+    run_client(sys.argv[1], sys.argv[2])
